@@ -47,7 +47,7 @@ telegram_app = None
 async def compare(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
         if len(context.args) < 1:
-            await update.message.reply_text("❌ Informe o nome do time. Exemplo: /compare Fulano 1;Fulano 2")
+            await update.message.reply_text("❌ Informe o nome do time. Exemplo: /stats Fulano 1;Fulano 2")
             return
 
         jogador_name = " ".join(context.args).split(";")

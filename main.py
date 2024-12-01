@@ -130,6 +130,7 @@ async def get_telegram_app():
 @app.post("/webhook")
 async def webhook(request: Request):
     try:
+        logger.error(request)
         tg_app = await get_telegram_app()
 
         data = await request.json()

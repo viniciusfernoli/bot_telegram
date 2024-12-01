@@ -6,21 +6,20 @@ import logging
 import os
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
+import asyncio
 
+# Inicializa o FastAPI
 app = FastAPI()
 
-origins = [
-    "*"
-]
-
+# Configurações CORS
+origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,  # Permitir origens específicas
-    allow_credentials=True, # Permitir envio de cookies/sessões
-    allow_methods=["*"],    # Permitir todos os métodos HTTP (GET, POST, etc.)
-    allow_headers=["*"],    # Permitir todos os headers
+    allow_credentials=True,  # Permitir envio de cookies/sessões
+    allow_methods=["*"],  # Permitir todos os métodos HTTP (GET, POST, etc.)
+    allow_headers=["*"],  # Permitir todos os headers
 )
-
 
 # Configurações de log
 logging.basicConfig(level=logging.INFO)
@@ -35,16 +34,12 @@ TOKEN = os.environ.get("TELEGRAM_TOKEN")
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 SWID = os.environ.get("SWID")
 
-
 # Inicializa a liga ESPN
 league = League(league_id=int(LEAGUE_ID), year=int(YEAR), espn_s2=ESPN_S2, swid=SWID)
 
-# Inicializa o bot do Telegram
-telegram_app = Application.builder().token(TOKEN).build()
-
-# Inicializa a aplicação FastAPI
-
+# Defina o telegram_app como None inicialmente
 telegram_app = None
+lock = asyncio.Lock()
 
 # Comando para comparar jogadores
 async def compare(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -101,27 +96,18 @@ async def team_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Olá, meus comandos são: \n\n/stats maxey;embiid\n\n/teaminfo time_aqui")
 
-
+# Função para inicializar o telegram_app com controle de concorrência
 async def get_telegram_app():
     global telegram_app
     if telegram_app is None:
-        telegram_app = (
-            Application.builder()
-            .token(TOKEN)
-            .updater(None)
-            .build()
-        )
-        
-        telegram_app.add_handler(CommandHandler("stats", compare))
-        telegram_app.add_handler(CommandHandler("teaminfo", team_info))
-        telegram_app.add_handler(CommandHandler("start", start))
-        
-        await telegram_app.initialize()
-        # Inicie o loop se necessário
-        await telegram_app.start()
-        
+        async with lock:  # Usar lock para garantir que apenas uma inicialização ocorra
+            if telegram_app is None:  # Verifique novamente dentro do lock
+                telegram_app = Application.builder().token(TOKEN).build()
+                telegram_app.add_handler(CommandHandler("stats", compare))
+                telegram_app.add_handler(CommandHandler("teaminfo", team_info))
+                telegram_app.add_handler(CommandHandler("start", start))
+                await telegram_app.initialize()
     return telegram_app
-
 
 # Endpoint do Webhook
 @app.post("/webhook")
@@ -136,7 +122,6 @@ async def webhook(request: Request):
         return {"status": "success"}
     except Exception as e:
         logger.error(f"Erro ao processar webhook: {e}")
-        print(f"Erro ao processar webhook: {e}")
         raise HTTPException(status_code=400, detail="Erro ao processar webhook")
 
 # Endpoint para configuração do Webhook
@@ -145,13 +130,9 @@ async def startup():
     try:
         tg_app = await get_telegram_app()
         await tg_app.bot.delete_webhook(drop_pending_updates=True)
-        await tg_app.bot.set_webhook(
-            url=WEBHOOK_URL, 
-            allowed_updates=Update.ALL_TYPES
-        )
+        await tg_app.bot.set_webhook(url=WEBHOOK_URL, allowed_updates=Update.ALL_TYPES)
         logger.info(f"Webhook set to {WEBHOOK_URL}")
     except Exception as e:
-        print(f"Startup error: {e}")
         logger.error(f"Startup error: {e}", exc_info=True)
 
 @app.on_event("shutdown")

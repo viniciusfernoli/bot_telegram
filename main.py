@@ -94,29 +94,33 @@ async def team_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         logger.error(f"Erro ao processar webhook de time: {e}")
         return await update.message.reply_text(f"❌ Erro ao buscar informações do time: {str(e)}")
 
-def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    return update.message.reply_text("Olá, meus comandos são: \n\n/stats jogador1;jogador2;jogador3;jogador4\n\n/teaminfo time_aqui\n\n/criterio entenda como mensuramos os critérios.\n\n /trade Valor total media A Valor total media B")
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    return await update.message.reply_text("Olá, meus comandos são: \n\n/stats jogador1;jogador2;jogador3;jogador4\n\n/teaminfo time_aqui\n\n/criterio entenda como mensuramos os critérios.\n\n /trade Valor total media A Valor total media B")
 
-def criterio(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    return update.message.reply_text("Então, para avaliar se uma trade é honesta, usamos os seguintes critérios:\n\n1. Se a média for entre 10-20, a diferença deve ser igual ou menor a 5.\n2. Se a média for entre 20-30, a diferença deve ser igual ou menor a 8.\n3. Se a média for 40 ou mais, a diferença deve ser igual ou menor a 10.\n\n Se as duas médias forem iguais, é uma trade aceitável. Lembrando que ainda assim o regulamento e a comissão vão avaliar outros fatores além da média.")
+async def criterio(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    return await update.message.reply_text("Então, para avaliar se uma trade é honesta, usamos os seguintes critérios:\n\n1. Se a média for entre 10-20, a diferença deve ser igual ou menor a 5.\n2. Se a média for entre 20-30, a diferença deve ser igual ou menor a 8.\n3. Se a média for 40 ou mais, a diferença deve ser igual ou menor a 10.\n\n Se as duas médias forem iguais, é uma trade aceitável. Lembrando que ainda assim o regulamento e a comissão vão avaliar outros fatores além da média.")
 
-def trade(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    valores = " ".join(context.args).split(" ")
-    valor1 = int(valores[0])
-    valor2 = int(valores[1])
+async def trade(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+
+    if len(context.args) < 2:
+        await update.message.reply_text("❌ Informe Valor total media A Valor total media B")
+        return
+
+    valor1 = int(context.args[0])
+    valor2 = int(context.args[1])
     media = (valor1 + valor2) / 2
     diferenca = abs(valor1 - valor2)
     
     if valor1 == valor2:
-        return update.message.reply_text(f"TRADE APROVADA: Médias iguais ({valor1}).")
+        return await update.message.reply_text(f"TRADE APROVADA: Médias iguais ({valor1}).")
     elif 10 <= media < 20 and diferenca <= 5:
-        return update.message.reply_text(f"TRADE APROVADA: Média {media:.1f}, diferença de {diferenca:.1f}. Critério atendido!")
+        return await update.message.reply_text(f"TRADE APROVADA: Média {media:.1f}, diferença de {diferenca:.1f}. Critério atendido!")
     elif 20 <= media < 30 and diferenca <= 8:
-        return update.message.reply_text(f"TRADE APROVADA: Média {media:.1f}, diferença de {diferenca:.1f}. Critério atendido!")
+        return await update.message.reply_text(f"TRADE APROVADA: Média {media:.1f}, diferença de {diferenca:.1f}. Critério atendido!")
     elif media >= 40 and diferenca <= 10:
-        return update.message.reply_text(f"TRADE APROVADA: Média {media:.1f}, diferença de {diferenca:.1f}. Critério atendido!")
+        return await update.message.reply_text(f"TRADE APROVADA: Média {media:.1f}, diferença de {diferenca:.1f}. Critério atendido!")
     else:
-        return update.message.reply_text(f"TRADE REPROVADA: Diferença de {diferenca:.1f}. Melhor ajustar as médias!")
+        return await update.message.reply_text(f"TRADE REPROVADA: Diferença de {diferenca:.1f}. Melhor ajustar as médias!")
 
 async def error_handler(update, context):
     print(f"Erro: {context.error}")

@@ -39,9 +39,6 @@ SWID = os.environ.get("SWID")
 # Inicializa a liga ESPN
 league = League(league_id=int(LEAGUE_ID), year=int(YEAR), espn_s2=ESPN_S2, swid=SWID)
 
-# Inicializa o bot do Telegram
-telegram_app = Application.builder().token(TOKEN).build()
-
 # Inicializa a aplicação FastAPI
 
 telegram_app = None

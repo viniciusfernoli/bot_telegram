@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, HTTPException
-from telegram import Update
+from telegram import Update,BotCommand
 from telegram.ext import Application, CommandHandler, ContextTypes
 from espn_api.basketball import League
 import logging
@@ -118,6 +118,11 @@ async def get_telegram_app():
                 .updater(None)
                 .build()
             )
+            await telegram_app.bot.set_my_commands([
+                BotCommand("start", "mostrar comando e iniciar bot"),
+                BotCommand("stats", "Exibir AVG e TotalPoints do jogador ou varios jogadores ( /stats maxey;embiid ). Separe os jogadores por ; sem espaçamento entre eles."),
+                BotCommand("teaminfo", "Mostrar informações do time"),
+            ])
             logger.info(f"ENTROU NO GET TELEGRAM")
             # Adiciona handlers
             telegram_app.add_handler(CommandHandler("stats", compare))

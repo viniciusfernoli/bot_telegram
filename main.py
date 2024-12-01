@@ -122,6 +122,7 @@ async def webhook(request: Request):
         return {"status": "success"}
     except Exception as e:
         logger.error(f"Erro ao processar webhook: {e}")
+        print(f"Erro ao processar webhook: {e}")
         raise HTTPException(status_code=400, detail="Erro ao processar webhook")
 
 # Endpoint para configuração do Webhook
@@ -136,6 +137,7 @@ async def startup():
         )
         logger.info(f"Webhook set to {WEBHOOK_URL}")
     except Exception as e:
+        print(f"Startup error: {e}")
         logger.error(f"Startup error: {e}", exc_info=True)
 
 # Endpoint para testar a saúde da aplicação

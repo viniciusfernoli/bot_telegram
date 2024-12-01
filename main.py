@@ -153,10 +153,10 @@ async def startup():
     try:
         tg_app = await get_telegram_app()
         await tg_app.bot.delete_webhook(drop_pending_updates=True)
-        await tg_app.bot.set_webhook(
-            url=WEBHOOK_URL, 
-            allowed_updates=Update.ALL_TYPES
-        )
+        # await tg_app.bot.set_webhook(
+        #     url=WEBHOOK_URL, 
+        #     allowed_updates=Update.ALL_TYPES
+        # )
         logger.info(f"Webhook set to {WEBHOOK_URL}")
     except Exception as e:
         logger.error(f"Startup error: {e}", exc_info=True)

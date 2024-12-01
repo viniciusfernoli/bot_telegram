@@ -82,7 +82,6 @@ async def team_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 application = ApplicationBuilder().token(TOKEN).build()
 telegram_app.add_handler(CommandHandler("compare", compare))
 telegram_app.add_handler(CommandHandler("teaminfo", team_info))
-application.run_polling(stop_signals=None)
 
 # Endpoint do Webhook
 @app.post("/webhook")

@@ -59,8 +59,7 @@ async def compare(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                         jogadores_encontrados.append(rt)
 
         if not jogadores_encontrados:
-            await update.message.reply_text("❌ Nenhum jogador encontrado.")
-            return
+           return await update.message.reply_text("❌ Nenhum jogador encontrado.")
 
         for jogador in jogadores_encontrados:
             jogadores_lista += f"{jogador.name}\n"

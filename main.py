@@ -114,13 +114,13 @@ async def trade(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if valor1 == valor2:
         return await update.message.reply_text(f"TRADE APROVADA: Médias iguais ({valor1}).")
     elif 10 <= media < 20 and diferenca <= 5:
-        return await update.message.reply_text(f"TRADE APROVADA: Média {media:.1f}, diferença de {diferenca:.1f}. Critério atendido!")
+        return await update.message.reply_text(f"TRADE APROVADA: diferença de {diferenca:.1f}. Critério atendido!")
     elif 20 <= media < 30 and diferenca <= 8:
-        return await update.message.reply_text(f"TRADE APROVADA: Média {media:.1f}, diferença de {diferenca:.1f}. Critério atendido!")
+        return await update.message.reply_text(f"TRADE APROVADA: diferença de {diferenca:.1f}. Critério atendido!")
     elif media >= 40 and diferenca <= 10:
-        return await update.message.reply_text(f"TRADE APROVADA: Média {media:.1f}, diferença de {diferenca:.1f}. Critério atendido!")
+        return await update.message.reply_text(f"TRADE APROVADA: diferença de {diferenca:.1f}. Critério atendido!")
     else:
-        return await update.message.reply_text(f"TRADE REPROVADA: Diferença de {diferenca:.1f}. Melhor ajustar as médias!")
+        return await update.message.reply_text(f"TRADE REPROVADA: diferença de {diferenca:.1f}. Melhor ajustar as médias!")
 
 async def error_handler(update, context):
     print(f"Erro: {context.error}")

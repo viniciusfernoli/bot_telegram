@@ -1,5 +1,6 @@
+import asyncio
 from fastapi import FastAPI, Request, HTTPException
-from telegram import Update,BotCommand
+from telegram import Update, BotCommand
 from telegram.ext import Application, CommandHandler, ContextTypes
 from espn_api.basketball import League
 import logging
@@ -22,7 +23,6 @@ app.add_middleware(
     allow_headers=["*"],    # Permitir todos os headers
 )
 
-
 # Configurações de log
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -36,15 +36,12 @@ TOKEN = os.environ.get("TELEGRAM_TOKEN")
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 SWID = os.environ.get("SWID")
 
-
 # Inicializa a liga ESPN
 league = League(league_id=int(LEAGUE_ID), year=int(YEAR), espn_s2=ESPN_S2, swid=SWID)
 
-# Inicializa a aplicação FastAPI
-
 telegram_app = None
+telegram_app_lock = Lock()
 
-# Comando para comparar jogadores
 async def compare(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
         if len(context.args) < 1:
@@ -75,7 +72,6 @@ async def compare(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         logger.error(f"Erro ao processar webhook de jogador: {e}")
         await update.message.reply_text(f"❌ Erro ao buscar informações do jogador: {str(e)}")
 
-# Comando para informações de um time
 async def team_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
         if len(context.args) < 1:
@@ -105,9 +101,6 @@ async def error_handler(update, context):
     print(f"Erro: {context.error}")
     logger.error(f"Erro ao processar webhook: {context.error}")
 
-
-telegram_app_lock = Lock()
-
 async def get_telegram_app():
     global telegram_app
     async with telegram_app_lock:
@@ -124,15 +117,12 @@ async def get_telegram_app():
                 BotCommand("teaminfo", "Mostrar informações do time"),
             ])
             logger.info(f"ENTROU NO GET TELEGRAM")
-            # Adiciona handlers
             telegram_app.add_handler(CommandHandler("stats", compare))
             telegram_app.add_handler(CommandHandler("teaminfo", team_info))
             telegram_app.add_handler(CommandHandler("start", start))
             telegram_app.add_error_handler(error_handler)
-            
             await telegram_app.initialize()
         return telegram_app
-
 
 @app.post("/webhook")
 async def webhook(request: Request):
@@ -151,7 +141,6 @@ async def webhook(request: Request):
         logger.error(f"Erro ao processar webhook: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail="Erro ao processar webhook")
 
-# Endpoint para configuração do Webhook
 @app.on_event("startup")
 async def startup():
     try:
@@ -165,7 +154,6 @@ async def startup():
     except Exception as e:
         logger.error(f"Startup error: {e}", exc_info=True)
 
-# Endpoint para testar a saúde da aplicação
 @app.get("/")
 async def health_check():
     return {"status": "running"}

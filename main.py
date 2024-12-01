@@ -129,23 +129,22 @@ async def get_telegram_app():
         return telegram_app
 
 
-# Endpoint do Webhook
-# @app.post("/webhook")
-# async def webhook(request: Request):
-#     try:
-#         data = await request.json()
-#         logger.info(f"Received webhook data: {data}")
+@app.post("/webhook")
+async def webhook(request: Request):
+    try:
+        data = await request.json()
+        logger.info(f"Received webhook data: {data}")
 
-#         tg_app = await get_telegram_app()
-#         update = Update.de_json(data, tg_app.bot)
+        tg_app = await get_telegram_app()
+        update = Update.de_json(data, tg_app.bot)
 
-#         if update:
-#             await tg_app.process_update(update)
+        if update:
+            await tg_app.process_update(update)
         
-#         return {"status": "success"}
-#     except Exception as e:
-#         logger.error(f"Erro ao processar webhook: {e}", exc_info=True)
-#         raise HTTPException(status_code=400, detail="Erro ao processar webhook")
+        return {"status": "success"}
+    except Exception as e:
+        logger.error(f"Erro ao processar webhook: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail="Erro ao processar webhook")
 
 # Endpoint para configuração do Webhook
 @app.on_event("startup")
@@ -153,10 +152,10 @@ async def startup():
     try:
         tg_app = await get_telegram_app()
         await tg_app.bot.delete_webhook(drop_pending_updates=True)
-        # await tg_app.bot.set_webhook(
-        #     url=WEBHOOK_URL, 
-        #     allowed_updates=Update.ALL_TYPES
-        # )
+        await tg_app.bot.set_webhook(
+            url=WEBHOOK_URL, 
+            allowed_updates=Update.ALL_TYPES
+        )
         logger.info(f"Webhook set to {WEBHOOK_URL}")
     except Exception as e:
         logger.error(f"Startup error: {e}", exc_info=True)

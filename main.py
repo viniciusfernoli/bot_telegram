@@ -118,7 +118,7 @@ async def get_telegram_app():
                 .updater(None)
                 .build()
             )
-            
+            logger.info(f"ENTROU NO GET TELEGRAM")
             # Adiciona handlers
             telegram_app.add_handler(CommandHandler("stats", compare))
             telegram_app.add_handler(CommandHandler("teaminfo", team_info))

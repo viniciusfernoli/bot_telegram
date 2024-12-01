@@ -26,7 +26,6 @@ app.add_middleware(
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 load_dotenv()
-umavez = 0
 
 # Configurações da liga e do bot
 LEAGUE_ID = os.environ.get("LEAGUE_ID")
@@ -127,9 +126,7 @@ async def get_telegram_app():
 @app.post("/webhook")
 async def webhook(request: Request):
     try:
-        if(umavez == 0):
-            tg_app = await get_telegram_app()
-            umavez = umavez+1
+        tg_app = await get_telegram_app()
 
         data = await request.json()
         update = Update.de_json(data, tg_app.bot)
@@ -142,19 +139,19 @@ async def webhook(request: Request):
         raise HTTPException(status_code=400, detail="Erro ao processar webhook")
 
 # Endpoint para configuração do Webhook
-# @app.on_event("startup")
-# async def startup():
-#     try:
-#         # tg_app = await get_telegram_app()
-#         await tg_app.bot.delete_webhook(drop_pending_updates=True)
-#         await tg_app.bot.set_webhook(
-#             url=WEBHOOK_URL, 
-#             allowed_updates=Update.ALL_TYPES
-#         )
-#         logger.info(f"Webhook set to {WEBHOOK_URL}")
-#     except Exception as e:
-#         print(f"Startup error: {e}")
-#         logger.error(f"Startup error: {e}", exc_info=True)
+@app.on_event("startup")
+async def startup():
+    try:
+        tg_app = await get_telegram_app()
+        await tg_app.bot.delete_webhook(drop_pending_updates=True)
+        await tg_app.bot.set_webhook(
+            url=WEBHOOK_URL, 
+            allowed_updates=Update.ALL_TYPES
+        )
+        logger.info(f"Webhook set to {WEBHOOK_URL}")
+    except Exception as e:
+        print(f"Startup error: {e}")
+        logger.error(f"Startup error: {e}", exc_info=True)
 
 # Endpoint para testar a saúde da aplicação
 @app.get("/")

@@ -99,9 +99,7 @@ async def team_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text(f"❌ Erro ao buscar informações do time: {str(e)}")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text("Olá, meus comandos são: \n\n/stats maxey;embiid!\n\n/teaminfo time_aqui")
-
-
+    await update.message.reply_text("Olá, meus comandos são: \n\n/stats maxey;embiid\n\n/teaminfo time_aqui")
 
 
 async def get_telegram_app():

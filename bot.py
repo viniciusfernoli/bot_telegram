@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request, HTTPException
 from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, ContextTypes,ApplicationBuilder
 from espn_api.basketball import League
 import logging
 import os
@@ -79,8 +79,10 @@ async def team_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text(f"❌ Erro ao buscar informações do time: {str(e)}")
 
 # Configura comandos do bot
+application = ApplicationBuilder().token(TOKEN).build()
 telegram_app.add_handler(CommandHandler("compare", compare))
 telegram_app.add_handler(CommandHandler("teaminfo", team_info))
+application.run_polling(stop_signals=None)
 
 # Endpoint do Webhook
 @app.post("/webhook")

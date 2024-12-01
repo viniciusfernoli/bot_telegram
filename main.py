@@ -112,13 +112,14 @@ async def get_telegram_app():
             .build()
         )
         
-        # Adiciona handlers
         telegram_app.add_handler(CommandHandler("stats", compare))
         telegram_app.add_handler(CommandHandler("teaminfo", team_info))
         telegram_app.add_handler(CommandHandler("start", start))
         
         await telegram_app.initialize()
-    
+        # Inicie o loop se necessário
+        await telegram_app.start()
+        
     return telegram_app
 
 
@@ -152,6 +153,12 @@ async def startup():
     except Exception as e:
         print(f"Startup error: {e}")
         logger.error(f"Startup error: {e}", exc_info=True)
+
+@app.on_event("shutdown")
+async def shutdown():
+    if telegram_app:
+        await telegram_app.stop()
+        await telegram_app.shutdown()
 
 # Endpoint para testar a saúde da aplicação
 @app.get("/")

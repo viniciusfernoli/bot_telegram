@@ -98,6 +98,7 @@ async def webhook(request: Request):
 # Endpoint para configuração do Webhook
 @app.on_event("startup")
 async def startup():
+    await telegram_app.bot.delete_webhook(drop_pending_updates=True)
     await telegram_app.bot.set_webhook(WEBHOOK_URL)
     logger.info("Webhook configurado com sucesso!")
 

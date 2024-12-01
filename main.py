@@ -95,7 +95,7 @@ async def team_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return await update.message.reply_text(f"❌ Erro ao buscar informações do time: {str(e)}")
 
 def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    return update.message.reply_text("Olá, meus comandos são: \n\n/stats maxey;embiid\n\n/teaminfo time_aqui")
+    return update.message.reply_text("Olá, meus comandos são: \n\n/stats jogador1;jogador2;jogador3;jogador4\n\n/teaminfo time_aqui\n\n/criterio\n\n /trade 10 20")
 
 def criterio(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     return update.message.reply_text("Então, para avaliar se uma trade é honesta, usamos os seguintes critérios:\n\n1. Se a média for entre 10-20, a diferença deve ser igual ou menor a 5.\n2. Se a média for entre 20-30, a diferença deve ser igual ou menor a 8.\n3. Se a média for 40 ou mais, a diferença deve ser igual ou menor a 10.\n\n Se as duas médias forem iguais, é uma trade aceitável. Lembrando que ainda assim o regulamento e a comissão vão avaliar outros fatores além da média.")

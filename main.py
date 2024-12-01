@@ -1,9 +1,11 @@
+from typing import Optional
 from fastapi import FastAPI, Request, HTTPException
-from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram import Update,Bot
+from telegram.ext import Application, CommandHandler, ContextTypes,Dispatcher
 from espn_api.basketball import League
 import logging
 import os
+from pydantic import BaseModel
 
 # Configurações de log
 logging.basicConfig(level=logging.INFO)
@@ -26,8 +28,22 @@ telegram_app = Application.builder().token(TOKEN).build()
 
 # Inicializa a aplicação FastAPI
 app = FastAPI()
-
-telegram_app = None
+class TelegramWebhook(BaseModel):
+    '''
+    Telegram Webhook Model using Pydantic for request body validation
+    '''
+    update_id: int
+    message: Optional[dict]
+    edited_message: Optional[dict]
+    channel_post: Optional[dict]
+    edited_channel_post: Optional[dict]
+    inline_query: Optional[dict]
+    chosen_inline_result: Optional[dict]
+    callback_query: Optional[dict]
+    shipping_query: Optional[dict]
+    pre_checkout_query: Optional[dict]
+    poll: Optional[dict]
+    poll_answer: Optional[dict]
 
 # Comando para comparar jogadores
 async def compare(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -85,56 +101,30 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Olá, meus comandos são: \n\n/stats maxey;embiid!\n\n/teaminfo time_aqui")
 
 
-
-
-async def get_telegram_app():
-    global telegram_app
-    if telegram_app is None:
-        telegram_app = (
-            Application.builder()
-            .token(TOKEN)
-            .updater(None)
-            .build()
-        )
-        
-        # Adiciona handlers
-        telegram_app.add_handler(CommandHandler("stats", compare))
-        telegram_app.add_handler(CommandHandler("teaminfo", team_info))
-        telegram_app.add_handler(CommandHandler("start", start))
-        
-        await telegram_app.initialize()
+def register_handlers(dispatcher):
+    start_handler = CommandHandler('start', start)
+    stats_handler = CommandHandler("stats", compare)
+    teaminfo_handler = CommandHandler("teaminfo", team_info)
+    dispatcher.add_handler(start_handler)
+    dispatcher.add_handler(stats_handler)
+    dispatcher.add_handler(teaminfo_handler)
     
-    return telegram_app
-
 
 # Endpoint do Webhook
 @app.post("/webhook")
-async def webhook(request: Request):
+async def webhook(webhook_data: TelegramWebhook):
     try:
-        tg_app = await get_telegram_app()
+        bot = Bot(token=TOKEN)
+        update = Update.de_json(webhook_data.__dict__, bot)
+        dispatcher = Dispatcher(bot, None, workers=4)
+        register_handlers(dispatcher)
+        dispatcher.process_update(update)
 
-        data = await request.json()
-        update = Update.de_json(data, tg_app.bot)
-        if update:
-            await tg_app.process_update(update)
-        return {"status": "success"}
+        return {"message": "ok"}
+    
     except Exception as e:
         logger.error(f"Erro ao processar webhook: {e}")
         raise HTTPException(status_code=400, detail="Erro ao processar webhook")
-
-# Endpoint para configuração do Webhook
-@app.on_event("startup")
-async def startup():
-    try:
-        tg_app = await get_telegram_app()
-        await tg_app.bot.delete_webhook(drop_pending_updates=True)
-        await tg_app.bot.set_webhook(
-            url=WEBHOOK_URL, 
-            allowed_updates=Update.ALL_TYPES
-        )
-        logger.info(f"Webhook set to {WEBHOOK_URL}")
-    except Exception as e:
-        logger.error(f"Startup error: {e}", exc_info=True)
 
 # Endpoint para testar a saúde da aplicação
 @app.get("/")

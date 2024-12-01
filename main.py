@@ -97,11 +97,11 @@ async def get_telegram_app():
             .build()
         )
         
-        await telegram_app.bot.set_my_commands([
-            BotCommand("stats", "Ver AVG e total_points de um jogador."),
-            BotCommand("teaminfo", "Exibir informação de um time."),
-            BotCommand("start", "Mostrar informações"),
-        ])
+        # await telegram_app.bot.set_my_commands([
+        #     BotCommand("stats", "Ver AVG e total_points de um jogador."),
+        #     BotCommand("teaminfo", "Exibir informação de um time."),
+        #     BotCommand("start", "Mostrar informações"),
+        # ])
 
         # Adiciona handlers
         telegram_app.add_handler(CommandHandler("stats", compare))

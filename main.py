@@ -67,10 +67,10 @@ async def compare(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             jogadores_lista += f"📋 AVG: {jogador.avg_points}\n"
             jogadores_lista += f"📋 Total Points: {jogador.total_points}\n\n"
 
-        await update.message.reply_text(jogadores_lista if jogadores_lista else "❌ Não foi possível encontrar os dados dos jogadores.")
+        return await update.message.reply_text(jogadores_lista if jogadores_lista else "❌ Não foi possível encontrar os dados dos jogadores.")
     except Exception as e:
         logger.error(f"Erro ao processar webhook de jogador: {e}")
-        await update.message.reply_text(f"❌ Erro ao buscar informações do jogador: {str(e)}")
+        return await update.message.reply_text(f"❌ Erro ao buscar informações do jogador: {str(e)}")
 
 async def team_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
@@ -87,22 +87,41 @@ async def team_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                         f"Proprietário: {owner['firstName']} {owner['lastName']}\n"
                         f"Vitórias: {team.wins}, Derrotas: {team.losses}\nJogadores:\n")
             response += "".join(f"- {player.name} ({player.position})\n" for player in team.roster)
-            await update.message.reply_text(response)
+            return await update.message.reply_text(response)
         else:
-            await update.message.reply_text("❌ Time não encontrado.")
+            return await update.message.reply_text("❌ Time não encontrado.")
     except Exception as e:
         logger.error(f"Erro ao processar webhook de time: {e}")
-        await update.message.reply_text(f"❌ Erro ao buscar informações do time: {str(e)}")
+        return await update.message.reply_text(f"❌ Erro ao buscar informações do time: {str(e)}")
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text("Olá, meus comandos são: \n\n/stats maxey;embiid\n\n/teaminfo time_aqui")
+def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    return update.message.reply_text("Olá, meus comandos são: \n\n/stats maxey;embiid\n\n/teaminfo time_aqui")
 
-async def criterio(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text("Então, para avaliar se uma trade é honesta, usamos os seguintes critérios:\n\n1. Se a média for entre 10-20, a diferença deve ser igual ou menor a 5.\n2. Se a média for entre 20-30, a diferença deve ser igual ou menor a 8.\n3. Se a média for 40 ou mais, a diferença deve ser igual ou menor a 10.\n\n Se as duas médias forem iguais, é uma trade aceitável. Lembrando que ainda assim o regulamento e a comissão vão avaliar outros fatores além da média.")
+def criterio(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    return update.message.reply_text("Então, para avaliar se uma trade é honesta, usamos os seguintes critérios:\n\n1. Se a média for entre 10-20, a diferença deve ser igual ou menor a 5.\n2. Se a média for entre 20-30, a diferença deve ser igual ou menor a 8.\n3. Se a média for 40 ou mais, a diferença deve ser igual ou menor a 10.\n\n Se as duas médias forem iguais, é uma trade aceitável. Lembrando que ainda assim o regulamento e a comissão vão avaliar outros fatores além da média.")
+
+def trade(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    valores = " ".join(context.args).split(" ")
+    valor1 = int(valores[0])
+    valor2 = int(valores[1])
+    media = (valor1 + valor2) / 2
+    diferenca = abs(valor1 - valor2)
+    
+    if valor1 == valor2:
+        return update.message.reply_text(f"TRADE APROVADA: Médias iguais ({valor1}).")
+    elif 10 <= media < 20 and diferenca <= 5:
+        return update.message.reply_text(f"TRADE APROVADA: Média {media:.1f}, diferença de {diferenca:.1f}. Critério atendido!")
+    elif 20 <= media < 30 and diferenca <= 8:
+        return update.message.reply_text(f"TRADE APROVADA: Média {media:.1f}, diferença de {diferenca:.1f}. Critério atendido!")
+    elif media >= 40 and diferenca <= 10:
+        return update.message.reply_text(f"TRADE APROVADA: Média {media:.1f}, diferença de {diferenca:.1f}. Critério atendido!")
+    else:
+        return update.message.reply_text(f"TRADE REPROVADA: Diferença de {diferenca:.1f}. Melhor ajustar as médias!")
 
 async def error_handler(update, context):
     print(f"Erro: {context.error}")
     logger.error(f"Erro ao processar webhook: {context.error}")
+    return None
 
 async def get_telegram_app():
     global telegram_app
@@ -119,12 +138,13 @@ async def get_telegram_app():
                 BotCommand("stats", "Exibir AVG e TotalPoints do jogador ou varios jogadores ( /stats maxey;embiid ). Separe os jogadores por ; sem espaçamento entre eles."),
                 BotCommand("teaminfo", "Mostrar informações do time"),
                 BotCommand("criterio", "Critério para avaliar a troca."),
+                BotCommand("trade", "Avaliar a média, se está reprovada ou não."),
             ])
-            logger.info(f"ENTROU NO GET TELEGRAM")
             telegram_app.add_handler(CommandHandler("stats", compare))
             telegram_app.add_handler(CommandHandler("teaminfo", team_info))
             telegram_app.add_handler(CommandHandler("start", start))
             telegram_app.add_handler(CommandHandler("criterio", criterio))
+            telegram_app.add_handler(CommandHandler("trade", trade))
             telegram_app.add_error_handler(error_handler)
             await telegram_app.initialize()
         return telegram_app
@@ -156,6 +176,7 @@ async def startup():
             allowed_updates=Update.ALL_TYPES
         )
         logger.info(f"Webhook set to {WEBHOOK_URL}")
+        return None
     except Exception as e:
         logger.error(f"Startup error: {e}", exc_info=True)
 

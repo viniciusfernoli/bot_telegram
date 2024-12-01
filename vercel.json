@@ -1,13 +1,13 @@
 {
   "builds": [{
-      "src": "bot.py",
+      "src": "main.py",
       "use": "@vercel/python",
       "config": { "maxLambdaSize": "15mb", "runtime": "python3.12" }
   }],
   "routes": [
       {
           "src": "/(.*)",
-          "dest": "bot.py"
+          "dest": "main.py"
       }
   ]
 }

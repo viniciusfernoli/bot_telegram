@@ -79,7 +79,7 @@ async def team_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text(f"❌ Erro ao buscar informações do time: {str(e)}")
 
 # Configura comandos do bot
-telegram_app.add_handler(CommandHandler("compare", compare))
+telegram_app.add_handler(CommandHandler("stats", compare))
 telegram_app.add_handler(CommandHandler("teaminfo", team_info))
 
 # Endpoint do Webhook

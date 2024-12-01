@@ -97,6 +97,9 @@ async def team_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Olá, meus comandos são: \n\n/stats maxey;embiid\n\n/teaminfo time_aqui")
 
+async def criterio(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text("Então, para avaliar se uma trade é honesta, usamos os seguintes critérios:\n\n1. Se a média for entre 10-20, a diferença deve ser igual ou menor a 5.\n2. Se a média for entre 20-30, a diferença deve ser igual ou menor a 8.\n3. Se a média for 40 ou mais, a diferença deve ser igual ou menor a 10.\n\n Se as duas médias forem iguais, é uma trade aceitável. Lembrando que ainda assim o regulamento e a comissão vão avaliar outros fatores além da média.")
+
 async def error_handler(update, context):
     print(f"Erro: {context.error}")
     logger.error(f"Erro ao processar webhook: {context.error}")
@@ -115,11 +118,13 @@ async def get_telegram_app():
                 BotCommand("start", "mostrar comando e iniciar bot"),
                 BotCommand("stats", "Exibir AVG e TotalPoints do jogador ou varios jogadores ( /stats maxey;embiid ). Separe os jogadores por ; sem espaçamento entre eles."),
                 BotCommand("teaminfo", "Mostrar informações do time"),
+                BotCommand("criterio", "Critério para avaliar a troca."),
             ])
             logger.info(f"ENTROU NO GET TELEGRAM")
             telegram_app.add_handler(CommandHandler("stats", compare))
             telegram_app.add_handler(CommandHandler("teaminfo", team_info))
             telegram_app.add_handler(CommandHandler("start", start))
+            telegram_app.add_handler(CommandHandler("criterio", criterio))
             telegram_app.add_error_handler(error_handler)
             await telegram_app.initialize()
         return telegram_app

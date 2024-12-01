@@ -93,11 +93,8 @@ telegram_app.add_handler(CommandHandler("start", start))
 async def webhook(request: Request):
     try:
         data = await request.json()
-        logger.info(f"passou de data {data}")
         update = Update.de_json(data, telegram_app.bot)
-        logger.info(f"passou do update {update}")
         await telegram_app.process_update(update)
-        logger.info(f"passou do process_update")
         return {"status": "success"}
     except Exception as e:
         logger.error(f"Erro ao processar webhook: {e}")

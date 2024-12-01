@@ -5,6 +5,22 @@ from espn_api.basketball import League
 import logging
 import os
 from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+origins = [
+    "*"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # Permitir origens específicas
+    allow_credentials=True, # Permitir envio de cookies/sessões
+    allow_methods=["*"],    # Permitir todos os métodos HTTP (GET, POST, etc.)
+    allow_headers=["*"],    # Permitir todos os headers
+)
+
 
 # Configurações de log
 logging.basicConfig(level=logging.INFO)
@@ -27,7 +43,6 @@ league = League(league_id=int(LEAGUE_ID), year=int(YEAR), espn_s2=ESPN_S2, swid=
 telegram_app = Application.builder().token(TOKEN).build()
 
 # Inicializa a aplicação FastAPI
-app = FastAPI()
 
 telegram_app = None
 

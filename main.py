@@ -130,22 +130,22 @@ async def get_telegram_app():
 
 
 # Endpoint do Webhook
-@app.post("/webhook")
-async def webhook(request: Request):
-    try:
-        data = await request.json()
-        logger.info(f"Received webhook data: {data}")
+# @app.post("/webhook")
+# async def webhook(request: Request):
+#     try:
+#         data = await request.json()
+#         logger.info(f"Received webhook data: {data}")
 
-        tg_app = await get_telegram_app()
-        update = Update.de_json(data, tg_app.bot)
+#         tg_app = await get_telegram_app()
+#         update = Update.de_json(data, tg_app.bot)
 
-        if update:
-            await tg_app.process_update(update)
+#         if update:
+#             await tg_app.process_update(update)
         
-        return {"status": "success"}
-    except Exception as e:
-        logger.error(f"Erro ao processar webhook: {e}", exc_info=True)
-        raise HTTPException(status_code=400, detail="Erro ao processar webhook")
+#         return {"status": "success"}
+#     except Exception as e:
+#         logger.error(f"Erro ao processar webhook: {e}", exc_info=True)
+#         raise HTTPException(status_code=400, detail="Erro ao processar webhook")
 
 # Endpoint para configuração do Webhook
 @app.on_event("startup")
@@ -165,3 +165,11 @@ async def startup():
 @app.get("/")
 async def health_check():
     return {"status": "running"}
+
+async def main():
+    application = await get_telegram_app()
+    await application.run_polling()
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())

@@ -10,13 +10,13 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Configurações da liga e do bot
-LEAGUE_ID = 438866
-YEAR = 2025
+LEAGUE_ID = os.getenv("LEAGUE_ID", 438866)
+YEAR = os.getenv("YEAR", 2025)
 ESPN_S2 = os.getenv("ESPN_S2", "AEBiL%2F4MN0OVO6Zb%2Bt2vetoNRBgVWmzgP8zEbt7i6%2Fh9lmA0SfHNRm3kpKN%2BmgNzbIqihzk7yS%2Byx7aHzht3J7CzLp%2F9XpMYtIrXllr2hnabouU0aOIk4grniKnNKa4taHZDI13WAsew430Yw90I5m%2BM%2BVuyQ0lb0q6%2Bbs89f2E5ydl9sOim8%2Buh4NE%2FUYy%2FlEFj5AZk62fyP1w8u0OxFwe5o2knGtXAdKwwAyRARyAC1wDlq5wN%2FUwZOIqTLdtfT1Xgepxty%2FmCMgs%2BD7%2FTLhtqDPbZUB6%2BqpY92FX8u08kQaC8jNZDWKiGoX1kjAsINTo%3D")
 SWID = os.getenv("SWID", "{0D2052B4-FEB7-43C7-8200-BF8D96BEED2E}")
 TOKEN = os.getenv("TELEGRAM_TOKEN", "7734107392:AAF4_oniWP8k-1dCk4D0j2-vv2CcmnpSfG4")
-# WEBHOOK_URL = os.getenv("WEBHOOK_URL", "https://daef-179-104-25-151.ngrok-free.app/webhook")  # Ex: https://seuapp.vercel.app/webhook
-WEBHOOK_URL = os.getenv("WEBHOOK_URL", "https://bot-telegram-vert-sigma.vercel.app/webhook")  # Ex: https://seuapp.vercel.app/webhook
+WEBHOOK_URL = os.getenv("WEBHOOK_URL", "https://daef-179-104-25-151.ngrok-free.app/webhook")  # Ex: https://seuapp.vercel.app/webhook
+# WEBHOOK_URL = os.getenv("WEBHOOK_URL", "https://bot-telegram-vert-sigma.vercel.app/webhook")  # Ex: https://seuapp.vercel.app/webhook
 
 # Inicializa a liga ESPN
 league = League(league_id=LEAGUE_ID, year=YEAR, espn_s2=ESPN_S2, swid=SWID)
@@ -26,6 +26,8 @@ telegram_app = Application.builder().token(TOKEN).build()
 
 # Inicializa a aplicação FastAPI
 app = FastAPI()
+
+telegram_app = None
 
 # Comando para comparar jogadores
 async def compare(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -82,16 +84,35 @@ async def team_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Olá, meus comandos são: \n\n/stats maxey;embiid!\n\n/teaminfo timea_qui")
 
-# Configura comandos do bot
-telegram_app.add_handler(CommandHandler("stats", compare))
-telegram_app.add_handler(CommandHandler("teaminfo", team_info))
-telegram_app.add_handler(CommandHandler("start", start))
+
+
+
+async def get_telegram_app():
+    global telegram_app
+    if telegram_app is None:
+        telegram_app = (
+            Application.builder()
+            .token(TOKEN)
+            .updater(None)
+            .build()
+        )
+        
+        # Adiciona handlers
+        telegram_app.add_handler(CommandHandler("stats", compare))
+        telegram_app.add_handler(CommandHandler("teaminfo", team_info))
+        telegram_app.add_handler(CommandHandler("start", start))
+        
+        await telegram_app.initialize()
+    
+    return telegram_app
 
 
 # Endpoint do Webhook
 @app.post("/webhook")
 async def webhook(request: Request):
     try:
+        tg_app = await get_telegram_app()
+
         data = await request.json()
         update = Update.de_json(data, telegram_app.bot)
         await telegram_app.process_update(update)
@@ -103,12 +124,16 @@ async def webhook(request: Request):
 # Endpoint para configuração do Webhook
 @app.on_event("startup")
 async def startup():
-    await telegram_app.initialize()
-    await telegram_app.bot.delete_webhook(drop_pending_updates=True)
-    await telegram_app.bot.set_webhook(WEBHOOK_URL)
-    logger.info(f"Webhook configurado com sucesso na url {WEBHOOK_URL}")
+    tg_app = await get_telegram_app()
+    await tg_app.bot.delete_webhook(drop_pending_updates=True)
+    await tg_app.bot.set_webhook(WEBHOOK_URL)
+    logger.info(f"Webhook set to {WEBHOOK_URL}")
 
 # Endpoint para testar a saúde da aplicação
 @app.get("/")
 async def health_check():
     return {"status": "running"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

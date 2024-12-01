@@ -157,7 +157,6 @@ async def get_telegram_app():
 async def webhook(request: Request):
     try:
         data = await request.json()
-        logger.info(f"Received webhook data: {data}")
 
         tg_app = await get_telegram_app()
         update = Update.de_json(data, tg_app.bot)

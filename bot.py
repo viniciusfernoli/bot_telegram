@@ -21,7 +21,7 @@ WEBHOOK_URL = os.getenv("WEBHOOK_URL", "https://bot-telegram-vert-sigma.vercel.a
 league = League(league_id=LEAGUE_ID, year=YEAR, espn_s2=ESPN_S2, swid=SWID)
 
 # Inicializa o bot do Telegram
-telegram_app = Application.builder().token(TOKEN).build()
+telegram_app = ApplicationBuilder().token(TOKEN).build()
 
 # Inicializa a aplicação FastAPI
 app = FastAPI()

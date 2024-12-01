@@ -98,6 +98,10 @@ async def team_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Olá, meus comandos são: \n\n/stats maxey;embiid\n\n/teaminfo time_aqui")
 
+async def error_handler(update, context):
+    print(f"Erro: {context.error}")
+    logger.error(f"Erro ao processar webhook: {context.error}")
+
 
 async def get_telegram_app():
     global telegram_app
@@ -113,7 +117,8 @@ async def get_telegram_app():
         telegram_app.add_handler(CommandHandler("stats", compare))
         telegram_app.add_handler(CommandHandler("teaminfo", team_info))
         telegram_app.add_handler(CommandHandler("start", start))
-        
+        telegram_app.add_error_handler(error_handler)
+
         await telegram_app.initialize()
     
     return telegram_app

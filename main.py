@@ -10,8 +10,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Configurações da liga e do bot
-LEAGUE_ID = os.getenv("LEAGUE_ID", 438866)
-YEAR = os.getenv("YEAR", 2025)
+LEAGUE_ID = os.getenv("LEAGUE_ID", "438866")
+YEAR = os.getenv("YEAR", "2025")
 ESPN_S2 = os.getenv("ESPN_S2", "AEBiL%2F4MN0OVO6Zb%2Bt2vetoNRBgVWmzgP8zEbt7i6%2Fh9lmA0SfHNRm3kpKN%2BmgNzbIqihzk7yS%2Byx7aHzht3J7CzLp%2F9XpMYtIrXllr2hnabouU0aOIk4grniKnNKa4taHZDI13WAsew430Yw90I5m%2BM%2BVuyQ0lb0q6%2Bbs89f2E5ydl9sOim8%2Buh4NE%2FUYy%2FlEFj5AZk62fyP1w8u0OxFwe5o2knGtXAdKwwAyRARyAC1wDlq5wN%2FUwZOIqTLdtfT1Xgepxty%2FmCMgs%2BD7%2FTLhtqDPbZUB6%2BqpY92FX8u08kQaC8jNZDWKiGoX1kjAsINTo%3D")
 SWID = os.getenv("SWID", "{0D2052B4-FEB7-43C7-8200-BF8D96BEED2E}")
 TOKEN = os.getenv("TELEGRAM_TOKEN", "7734107392:AAF4_oniWP8k-1dCk4D0j2-vv2CcmnpSfG4")

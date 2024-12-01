@@ -26,6 +26,7 @@ app.add_middleware(
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 load_dotenv()
+umavez = 0
 
 # Configurações da liga e do bot
 LEAGUE_ID = os.environ.get("LEAGUE_ID")
@@ -41,6 +42,10 @@ league = League(league_id=int(LEAGUE_ID), year=int(YEAR), espn_s2=ESPN_S2, swid=
 
 # Inicializa o bot do Telegram
 telegram_app = Application.builder().token(TOKEN).build()
+
+# Inicializa a aplicação FastAPI
+
+telegram_app = None
 
 # Comando para comparar jogadores
 async def compare(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -98,19 +103,38 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Olá, meus comandos são: \n\n/stats maxey;embiid\n\n/teaminfo time_aqui")
 
 
-telegram_app.add_handler(CommandHandler("stats", compare))
-telegram_app.add_handler(CommandHandler("teaminfo", team_info))
-telegram_app.add_handler(CommandHandler("start", start))
-telegram_app.initialize()
+async def get_telegram_app():
+    global telegram_app
+    if telegram_app is None:
+        telegram_app = (
+            Application.builder()
+            .token(TOKEN)
+            .updater(None)
+            .build()
+        )
+        
+        # Adiciona handlers
+        telegram_app.add_handler(CommandHandler("stats", compare))
+        telegram_app.add_handler(CommandHandler("teaminfo", team_info))
+        telegram_app.add_handler(CommandHandler("start", start))
+        
+        await telegram_app.initialize()
+    
+    return telegram_app
+
 
 # Endpoint do Webhook
 @app.post("/webhook")
 async def webhook(request: Request):
     try:
+        if(umavez == 0):
+            tg_app = await get_telegram_app()
+            umavez = umavez+1
+
         data = await request.json()
-        update = Update.de_json(data, telegram_app.bot)
+        update = Update.de_json(data, tg_app.bot)
         if update:
-            await telegram_app.process_update(update)
+            await tg_app.process_update(update)
         return {"status": "success"}
     except Exception as e:
         logger.error(f"Erro ao processar webhook: {e}")
@@ -118,18 +142,19 @@ async def webhook(request: Request):
         raise HTTPException(status_code=400, detail="Erro ao processar webhook")
 
 # Endpoint para configuração do Webhook
-@app.on_event("startup")
-async def startup():
-    try:
-        await telegram_app.bot.delete_webhook(drop_pending_updates=True)
-        await telegram_app.bot.set_webhook(
-            url=WEBHOOK_URL, 
-            allowed_updates=Update.ALL_TYPES
-        )
-        logger.info(f"Webhook set to {WEBHOOK_URL}")
-    except Exception as e:
-        print(f"Startup error: {e}")
-        logger.error(f"Startup error: {e}", exc_info=True)
+# @app.on_event("startup")
+# async def startup():
+#     try:
+#         # tg_app = await get_telegram_app()
+#         await tg_app.bot.delete_webhook(drop_pending_updates=True)
+#         await tg_app.bot.set_webhook(
+#             url=WEBHOOK_URL, 
+#             allowed_updates=Update.ALL_TYPES
+#         )
+#         logger.info(f"Webhook set to {WEBHOOK_URL}")
+#     except Exception as e:
+#         print(f"Startup error: {e}")
+#         logger.error(f"Startup error: {e}", exc_info=True)
 
 # Endpoint para testar a saúde da aplicação
 @app.get("/")

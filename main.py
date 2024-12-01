@@ -6,6 +6,7 @@ import logging
 import os
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
+from asyncio import Lock
 
 app = FastAPI()
 
@@ -105,42 +106,45 @@ async def error_handler(update, context):
     logger.error(f"Erro ao processar webhook: {context.error}")
 
 
+telegram_app_lock = Lock()
+
 async def get_telegram_app():
     global telegram_app
-    if telegram_app is None:
-        telegram_app = (
-            Application.builder()
-            .token(TOKEN)
-            .updater(None)
-            .build()
-        )
-        
-        # Adiciona handlers
-        telegram_app.add_handler(CommandHandler("stats", compare))
-        telegram_app.add_handler(CommandHandler("teaminfo", team_info))
-        telegram_app.add_handler(CommandHandler("start", start))
-        telegram_app.add_error_handler(error_handler)
-
-        await telegram_app.initialize()
-    
-    return telegram_app
+    async with telegram_app_lock:
+        if telegram_app is None:
+            telegram_app = (
+                Application.builder()
+                .token(TOKEN)
+                .updater(None)
+                .build()
+            )
+            
+            # Adiciona handlers
+            telegram_app.add_handler(CommandHandler("stats", compare))
+            telegram_app.add_handler(CommandHandler("teaminfo", team_info))
+            telegram_app.add_handler(CommandHandler("start", start))
+            telegram_app.add_error_handler(error_handler)
+            
+            await telegram_app.initialize()
+        return telegram_app
 
 
 # Endpoint do Webhook
 @app.post("/webhook")
 async def webhook(request: Request):
     try:
-        logger.error(request)
-        tg_app = await get_telegram_app()
-
         data = await request.json()
+        logger.info(f"Received webhook data: {data}")
+
+        tg_app = await get_telegram_app()
         update = Update.de_json(data, tg_app.bot)
+
         if update:
             await tg_app.process_update(update)
+        
         return {"status": "success"}
     except Exception as e:
-        logger.error(f"Erro ao processar webhook: {e}")
-        print(f"Erro ao processar webhook: {e}")
+        logger.error(f"Erro ao processar webhook: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail="Erro ao processar webhook")
 
 # Endpoint para configuração do Webhook
@@ -155,7 +159,6 @@ async def startup():
         )
         logger.info(f"Webhook set to {WEBHOOK_URL}")
     except Exception as e:
-        print(f"Startup error: {e}")
         logger.error(f"Startup error: {e}", exc_info=True)
 
 # Endpoint para testar a saúde da aplicação

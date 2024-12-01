@@ -114,7 +114,7 @@ async def webhook(request: Request):
         tg_app = await get_telegram_app()
 
         data = await request.json()
-        update = Update.de_json(data, tg_app.bot.bot)
+        update = Update.de_json(data, tg_app.bot)
         if update:
             await tg_app.process_update(update)
         return {"status": "success"}

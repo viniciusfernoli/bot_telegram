@@ -19,7 +19,7 @@ WEBHOOK_URL = os.getenv("WEBHOOK_URL", "https://daef-179-104-25-151.ngrok-free.a
 # WEBHOOK_URL = os.getenv("WEBHOOK_URL", "https://bot-telegram-vert-sigma.vercel.app/webhook")  # Ex: https://seuapp.vercel.app/webhook
 
 # Inicializa a liga ESPN
-league = League(league_id=LEAGUE_ID, year=YEAR, espn_s2=ESPN_S2, swid=SWID)
+league = League(league_id=int(LEAGUE_ID), year=int(YEAR), espn_s2=ESPN_S2, swid=SWID)
 
 # Inicializa o bot do Telegram
 telegram_app = Application.builder().token(TOKEN).build()
@@ -133,7 +133,3 @@ async def startup():
 @app.get("/")
 async def health_check():
     return {"status": "running"}
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)

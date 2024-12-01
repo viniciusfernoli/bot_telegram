@@ -102,6 +102,13 @@ async def startup():
     await telegram_app.bot.set_webhook(WEBHOOK_URL)
     logger.info("Webhook configurado com sucesso!")
 
+
+@app.post("/startup")
+async def startup():
+    await telegram_app.bot.delete_webhook(drop_pending_updates=True)
+    await telegram_app.bot.set_webhook(WEBHOOK_URL)
+    logger.info("Webhook configurado com sucesso!")
+
 # Endpoint para testar a saúde da aplicação
 @app.get("/")
 async def health_check():

@@ -73,6 +73,7 @@ async def compare(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     except Exception as e:
         logger.error(f"Erro ao processar webhook de jogador: {e}", exc_info=True)
         try:
+            return
             await update.message.reply_text(f"❌ Erro ao buscar informações do jogador: {str(e)}")
         except Exception as reply_error:
             logger.error(f"Erro ao enviar mensagem de erro: {reply_error}", exc_info=True)
@@ -97,7 +98,8 @@ async def team_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             return await update.message.reply_text("❌ Time não encontrado.")
     except Exception as e:
         logger.error(f"Erro ao processar webhook de time: {e}")
-        return await update.message.reply_text(f"❌ Erro ao buscar informações do time: {str(e)}")
+        return 
+        await update.message.reply_text(f"❌ Erro ao buscar informações do time: {str(e)}")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     return await update.message.reply_text("Olá, meus comandos são: \n\n"

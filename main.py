@@ -41,9 +41,9 @@ SWID = os.environ.get("SWID")
 
 # Inicializa a liga ESPN
 league = League(league_id=int(LEAGUE_ID), year=int(YEAR), espn_s2=ESPN_S2, swid=SWID)
-
 telegram_app = None
 telegram_app_lock = Lock()
+loop = asyncio.get_event_loop()
 
 async def compare(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
@@ -141,11 +141,8 @@ async def error_handler(update, context):
     logger.error(f"Erro ao processar webhook: {context.error}")
     return None
 
-async def get_telegram_app(loop=None):
-    global telegram_app
-    if loop is None:
-        loop = asyncio.get_event_loop()
-    
+async def get_telegram_app():
+    global telegram_app   
     async with telegram_app_lock:
         if telegram_app is None:
             telegram_app = (
@@ -175,8 +172,6 @@ async def webhook(request: Request):
     try:
         data = await request.json()
 
-        # Usar o loop de eventos atual
-        loop = asyncio.get_event_loop()
         tg_app = await get_telegram_app(loop)
         
         update = Update.de_json(data, tg_app.bot)
@@ -190,24 +185,28 @@ async def webhook(request: Request):
         raise HTTPException(status_code=400, detail="Erro ao processar webhook")
 
 @app.on_event("startup")
+async def fastapi_startup():
+    await startup()  # Configura o bot ao iniciar o FastAPI
+
+
 async def startup():
     try:
-        tg_app = await get_telegram_app(asyncio.get_running_loop())
-        await tg_app.bot.delete_webhook(drop_pending_updates=True)
-        await tg_app.bot.set_webhook(
-            url=WEBHOOK_URL,
-            allowed_updates=Update.ALL_TYPES
-        )
-        logger.info(f"Webhook set to {WEBHOOK_URL}")
+        # Configura explicitamente o loop no Application
+        telegram_app._application_ready = asyncio.Event(loop=loop)
+        await telegram_app.initialize()
+        await telegram_app.start()
+
+        await telegram_app.bot.delete_webhook(drop_pending_updates=True)
+        await telegram_app.bot.set_webhook(url=WEBHOOK_URL)
+        print(f"Webhook configurado com sucesso: {WEBHOOK_URL}")
     except Exception as e:
-        logger.error(f"Startup error: {e}", exc_info=True)
+        print(f"Erro ao configurar o Telegram bot: {e}")
 
 @app.get("/")
 async def health_check():
     return {"status": "running"}
 
 async def main():
-    loop = asyncio.get_event_loop()
     application = await get_telegram_app(loop)
     try:
         await application.run_polling()

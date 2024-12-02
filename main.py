@@ -130,8 +130,11 @@ async def error_handler(update, context):
     logger.error(f"Erro ao processar webhook: {context.error}")
     return None
 
-async def get_telegram_app():
+async def get_telegram_app(loop=None):
     global telegram_app
+    if loop is None:
+        loop = asyncio.get_event_loop()
+    
     async with telegram_app_lock:
         if telegram_app is None:
             telegram_app = (
@@ -160,19 +163,20 @@ async def get_telegram_app():
 async def webhook(request: Request):
     try:
         data = await request.json()
-        tg_app = await get_telegram_app()
+
+        # Usar o loop de eventos atual
+        loop = asyncio.get_event_loop()
+        tg_app = await get_telegram_app(loop)
         
-        try:
-            update = Update.de_json(data, tg_app.bot)
-            if update:
-                await tg_app.process_update(update)
-        except Exception as update_error:
-            logger.error(f"Erro ao processar update: {update_error}", exc_info=True)
+        update = Update.de_json(data, tg_app.bot)
+
+        if update:
+            await tg_app.process_update(update)
         
         return {"status": "success"}
     except Exception as e:
-        logger.error(f"Erro crítico no webhook: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Erro interno no processamento do webhook")
+        logger.error(f"Erro ao processar webhook: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail="Erro ao processar webhook")
 
 @app.on_event("startup")
 async def startup():
@@ -193,7 +197,8 @@ async def health_check():
     return {"status": "running"}
 
 async def main():
-    application = await get_telegram_app()
+    loop = asyncio.get_event_loop()
+    application = await get_telegram_app(loop)
     try:
         await application.run_polling()
     finally:

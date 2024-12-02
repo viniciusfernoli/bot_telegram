@@ -8,6 +8,8 @@ import os
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 from asyncio import Lock
+import nest_asyncio
+nest_asyncio.apply()
 
 app = FastAPI()
 
@@ -60,15 +62,18 @@ async def compare(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             await update.message.reply_text("❌ Nenhum jogador encontrado.")
             return
 
-        jogadores_lista = f'Stats {YEAR} Antas\n\n' + "".join(
-            f"{jogador.name}\n📋 AVG: {jogador.avg_points}\n📋 Total Points: {jogador.total_points}\n\n"
+        jogadores_lista = f'Stats {YEAR} Antas\n\n' + "\n".join(
+            f"{jogador.name}\n📋 AVG: {jogador.avg_points}\n📋 Total Points: {jogador.total_points}"
             for jogador in jogadores_encontrados
         )
 
         await update.message.reply_text(jogadores_lista)
     except Exception as e:
-        logger.error(f"Erro ao processar webhook de jogador: {e}")
-        await update.message.reply_text(f"❌ Erro ao buscar informações do jogador: {str(e)}")
+        logger.error(f"Erro ao processar webhook de jogador: {e}", exc_info=True)
+        try:
+            await update.message.reply_text(f"❌ Erro ao buscar informações do jogador: {str(e)}")
+        except Exception as reply_error:
+            logger.error(f"Erro ao enviar mensagem de erro: {reply_error}", exc_info=True)
 
 async def team_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
@@ -155,17 +160,19 @@ async def get_telegram_app():
 async def webhook(request: Request):
     try:
         data = await request.json()
-
         tg_app = await get_telegram_app()
-        update = Update.de_json(data, tg_app.bot)
-
-        if update:
-            await tg_app.process_update(update)
+        
+        try:
+            update = Update.de_json(data, tg_app.bot)
+            if update:
+                await tg_app.process_update(update)
+        except Exception as update_error:
+            logger.error(f"Erro ao processar update: {update_error}", exc_info=True)
         
         return {"status": "success"}
     except Exception as e:
-        logger.error(f"Erro ao processar webhook: {e}", exc_info=True)
-        raise HTTPException(status_code=400, detail="Erro ao processar webhook")
+        logger.error(f"Erro crítico no webhook: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Erro interno no processamento do webhook")
 
 @app.on_event("startup")
 async def startup():
@@ -187,8 +194,10 @@ async def health_check():
 
 async def main():
     application = await get_telegram_app()
-    await application.run_polling()
+    try:
+        await application.run_polling()
+    finally:
+        await application.stop()
 
 if __name__ == "__main__":
-    import asyncio
     asyncio.run(main())

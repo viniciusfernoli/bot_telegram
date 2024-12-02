@@ -125,6 +125,11 @@ async def trade(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     valor1 = int(context.args[0])
     valor2 = int(context.args[1])
+
+    if not (valor1.isdigit() or valor2.isdigit()):
+        await update.message.reply_text("❌ Informe um valor, valor incorreto, não é número.")
+    
+
     media = (valor1 + valor2) / 2
     diferenca = abs(valor1 - valor2)
     

@@ -44,32 +44,31 @@ telegram_app_lock = Lock()
 
 async def compare(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
-        if len(context.args) < 1:
+        if not context.args:
             await update.message.reply_text("❌ Informe o nome do time. Exemplo: /stats Fulano 1;Fulano 2")
             return
 
-        jogador_name = " ".join(context.args).split(";")
-        jogadores_lista = f'Stats {YEAR} Antas\n\n'
-        jogadores_encontrados = []
-
-        for team in league.teams:
-            for name in jogador_name:
-                for rt in team.roster:
-                    if name.strip().lower() in rt.name.lower():
-                        jogadores_encontrados.append(rt)
+        jogador_names = [name.strip().lower() for name in " ".join(context.args).split(";")]
+        jogadores_encontrados = [
+            rt
+            for team in league.teams
+            for rt in team.roster
+            if any(name in rt.name.lower() for name in jogador_names)
+        ]
 
         if not jogadores_encontrados:
-           return await update.message.reply_text("❌ Nenhum jogador encontrado.")
+            await update.message.reply_text("❌ Nenhum jogador encontrado.")
+            return
 
-        for jogador in jogadores_encontrados:
-            jogadores_lista += f"{jogador.name}\n"
-            jogadores_lista += f"📋 AVG: {jogador.avg_points}\n"
-            jogadores_lista += f"📋 Total Points: {jogador.total_points}\n\n"
+        jogadores_lista = f'Stats {YEAR} Antas\n\n' + "".join(
+            f"{jogador.name}\n📋 AVG: {jogador.avg_points}\n📋 Total Points: {jogador.total_points}\n\n"
+            for jogador in jogadores_encontrados
+        )
 
-        return await update.message.reply_text(jogadores_lista if jogadores_lista else "❌ Não foi possível encontrar os dados dos jogadores.")
+        await update.message.reply_text(jogadores_lista)
     except Exception as e:
         logger.error(f"Erro ao processar webhook de jogador: {e}")
-        return await update.message.reply_text(f"❌ Erro ao buscar informações do jogador: {str(e)}")
+        await update.message.reply_text(f"❌ Erro ao buscar informações do jogador: {str(e)}")
 
 async def team_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:

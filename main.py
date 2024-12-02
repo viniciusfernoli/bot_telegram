@@ -1,3 +1,6 @@
+import nest_asyncio
+nest_asyncio.apply()
+
 import asyncio
 from fastapi import FastAPI, Request, HTTPException
 from telegram import Update, BotCommand
@@ -8,8 +11,6 @@ import os
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 from asyncio import Lock
-import nest_asyncio
-nest_asyncio.apply()
 
 app = FastAPI()
 
@@ -98,10 +99,20 @@ async def team_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return await update.message.reply_text(f"❌ Erro ao buscar informações do time: {str(e)}")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    return await update.message.reply_text("Olá, meus comandos são: \n\n/stats jogador1;jogador2;jogador3;jogador4\n\n/teaminfo time_aqui\n\n/criterio entenda como mensuramos os critérios.\n\n /trade Valor total media A Valor total media B")
+    return await update.message.reply_text("Olá, meus comandos são: \n\n"
+                                           "/stats jogador1;jogador2;jogador3;jogador4\n\n"
+                                           "/teaminfo time_aqui\n\n"
+                                           "/criterio entenda como mensuramos os critérios.\n\n"
+                                           "/trade Valor total media A Valor total media B")
+
 
 async def criterio(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    return await update.message.reply_text("Então, para avaliar se uma trade é honesta, usamos os seguintes critérios:\n\n1. Se a média for entre 10-20, a diferença deve ser igual ou menor a 5.\n2. Se a média for entre 20-30, a diferença deve ser igual ou menor a 8.\n3. Se a média for 40 ou mais, a diferença deve ser igual ou menor a 10.\n\n Se as duas médias forem iguais, é uma trade aceitável. Lembrando que ainda assim o regulamento e a comissão vão avaliar outros fatores além da média.")
+    return await update.message.reply_text("Então, para avaliar se uma trade é honesta, usamos os seguintes critérios:\n\n"
+                                           "1. Se a média for entre 10-20, a diferença deve ser igual ou menor a 5.\n"
+                                           "2. Se a média for entre 20-30, a diferença deve ser igual ou menor a 8.\n"
+                                           "3. Se a média for 40 ou mais, a diferença deve ser igual ou menor a 10.\n\n"
+                                           "Se as duas médias forem iguais, é uma trade aceitável. Lembrando que ainda "
+                                           "assim o regulamento e a comissão vão avaliar outros fatores além da média.")
 
 async def trade(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
@@ -181,14 +192,13 @@ async def webhook(request: Request):
 @app.on_event("startup")
 async def startup():
     try:
-        tg_app = await get_telegram_app()
+        tg_app = await get_telegram_app(asyncio.get_running_loop())
         await tg_app.bot.delete_webhook(drop_pending_updates=True)
         await tg_app.bot.set_webhook(
-            url=WEBHOOK_URL, 
+            url=WEBHOOK_URL,
             allowed_updates=Update.ALL_TYPES
         )
         logger.info(f"Webhook set to {WEBHOOK_URL}")
-        return None
     except Exception as e:
         logger.error(f"Startup error: {e}", exc_info=True)
 

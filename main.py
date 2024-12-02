@@ -65,7 +65,7 @@ async def compare(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             return
 
         jogadores_lista = f'Stats {YEAR} Antas\n\n' + "\n".join(
-            f"{jogador.name}\n📋 AVG: {jogador.avg_points}\n📋 Total Points: {jogador.total_points}"
+            f"{jogador.name}\n📋 AVG: {jogador.avg_points}\n📋 Total Points: {jogador.total_points}\n"
             for jogador in jogadores_encontrados
         )
 

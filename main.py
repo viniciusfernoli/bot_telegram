@@ -11,6 +11,7 @@ import os
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 from asyncio import Lock
+import re
 
 app = FastAPI()
 
@@ -45,6 +46,10 @@ league = League(league_id=int(LEAGUE_ID), year=int(YEAR), espn_s2=ESPN_S2, swid=
 telegram_app = None
 telegram_app_lock = Lock()
 loop = asyncio.get_event_loop()
+
+
+def is_number(value):
+    return bool(re.match(r"^-?\d+([.,]\d+)?$", value))
 
 async def compare(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
@@ -123,14 +128,13 @@ async def trade(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text("❌ Informe Valor total media A Valor total media B")
         return
 
-    if not (context.args[0].isdigit() and context.args[1].isdigit()):
+    if not (is_number(context.args[0]) and is_number(context.args[1])):
         await update.message.reply_text("❌ Informe um valor, valor incorreto, não é número.")
         return
-    
-    valor1 = int(context.args[0])
-    valor2 = int(context.args[1])
+        
+    valor1 = float(context.args[0].replace(',', '.'))
+    valor2 = float(context.args[1].replace(',', '.'))
 
-    
     media = (valor1 + valor2) / 2
     diferenca = abs(valor1 - valor2)
     
